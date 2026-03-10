@@ -1,31 +1,62 @@
+/**
+ * parseValues.js — YAML Schema Extractor
+ *
+ * Reads the official Camunda Helm chart values.yaml, extracts every
+ * configurable field and its ## @param description, then writes a flat
+ * schema.json that the React UI consumes at runtime.
+ *
+ * Run with:  npm run parse
+ *
+ * Input:   public/values.yaml
+ * Output:  src/schema.json
+ *
+ * Data flow:
+ *
+ *   values.yaml (raw text + YAML structure)
+ *        |
+ *        ├── js-yaml parses structure 
+ *        └── comment parser           
+ *             |
+ *             └── combined + typed
+ *                  |
+ *                  └── schema.json  ← consumed by the React UI
+ */
+
+
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import yaml from 'js-yaml'
 
+// Resolve __dirname in ESM (not available natively unlike CommonJS)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// ─── Read source file ─────────────────────────────────────────────────────────
 
 const rawYaml = fs.readFileSync(
   path.join(__dirname, '../public/values.yaml'),
   'utf8'
 )
 
-console.log('File read successfully')
-console.log('File size:', rawYaml.length, 'characters')
+process.stdout.write(`[parse] Read values.yaml — ${rawYaml.length.toLocaleString()} characters\n`)
 
-// Parse the YAML into a JavaScript object
+// Parse the YAML into a JavaScript object so we can traverse its structure
 const parsedYaml = yaml.load(rawYaml)
 
-console.log('YAML parsed successfully')
-console.log('Top level keys:', Object.keys(parsedYaml))
+process.stdout.write(`[parse] YAML parsed — top-level keys: ${Object.keys(parsedYaml).join(', ')}\n`)
 
 
+// ─── Object Flattening ────────────────────────────────────────────────────────
+//
+// The parsed YAML is a deeply nested object. We flatten it into a list of
+// dot-notation paths so every field can be referenced by a single string
+// e.g. { global: { elasticsearch: { auth: { username: "" } } } }
+// becomes  "global.elasticsearch.auth.username"
+//
+// This makes it trivial to look up any field, map user inputs to YAML paths,
+// and reconstruct the correct nested structure in the output.
 
-
-/*OBJECT FLATTENING */
-
-// Flatten nested object into dot notation paths
 function flattenObject(obj, parentPath = '') {
   const result = []
 
@@ -50,29 +81,36 @@ function flattenObject(obj, parentPath = '') {
   return result
 }
 
-// Run the flattening
 const flatFields = flattenObject(parsedYaml)
 
-console.log('Total fields found:', flatFields.length)
-console.log('First 5 fields:', flatFields.slice(0, 5))
+process.stdout.write(`[parse] Flattened — ${flatFields.length} fields extracted\n`)
 
 
+// ─── Comment Parser ───────────────────────────────────────────────────────────
+//
+// The values.yaml file documents each field with a structured comment directly
+// above it, following the Bitnami convention:
+//
+//   ## @param global.elasticsearch.auth.username the username for external elasticsearch
+//
+// We parse these from the raw text (not the parsed YAML, since comments are
+// stripped during YAML parsing) and build a path → description map.
+// The path in the comment is used as the key so we can join it with the
+// flattened fields in the next step.
 
-
-/*COMMENTS PARSER */
-// Parse ## @param comments from raw yaml text
 function parseComments(rawText) {
   const result = {}
   const lines = rawText.split('\n')
 
   for (const line of lines) {
     if (line.includes('## @param')) {
-      // Remove the ## @param part
+      // Strip the ## @param prefix, leaving "<path> <description>"
       const content = line.replace(/.*##\s*@param\s+/, '').trim()
-      
-      // First word is the path, rest is the description
+
+      // First word is the path, everything after is the description
+      // (descriptions can contain spaces, URLs, punctuation)
       const spaceIndex = content.indexOf(' ')
-      
+
       if (spaceIndex !== -1) {
         const path = content.substring(0, spaceIndex)
         const description = content.substring(spaceIndex + 1).trim()
@@ -86,19 +124,23 @@ function parseComments(rawText) {
 
 const comments = parseComments(rawYaml)
 
-console.log('Total comments found:', Object.keys(comments).length)
-console.log('First 5 comments:', Object.entries(comments).slice(0, 5))
+process.stdout.write(`[parse] Comments parsed — ${Object.keys(comments).length} @param descriptions found\n`)
 
 
-/*We have two lists, both using the path as the common key. We just merge them together. */
-// Combine flat fields with comments
+// ─── Combine Fields and Comments ──────────────────────────────────────────────
+//
+// Both lists use the dot-notation path as a common key, so combining them is
+// a straightforward map. Fields without a matching comment get an empty string.
+// We also infer a type from the default value so the UI can render the
+// appropriate input (e.g. checkboxes for booleans, text inputs for strings).
+
 function combineFieldsAndComments(flatFields, comments) {
   return flatFields.map(field => {
     return {
       path: field.path,
       default: field.default,
-      type: Array.isArray(field.default) 
-        ? 'array' 
+      type: Array.isArray(field.default)
+        ? 'array'
         : typeof field.default,
       description: comments[field.path] || ''
     }
@@ -107,14 +149,15 @@ function combineFieldsAndComments(flatFields, comments) {
 
 const schema = combineFieldsAndComments(flatFields, comments)
 
-console.log('Total schema entries:', schema.length)
-console.log('Sample entry:', schema[0])
+process.stdout.write(`[parse] Schema built — ${schema.length} entries total\n`)
 
 
+// ─── Write Output ─────────────────────────────────────────────────────────────
+//
+// schema.json is the single file the React UI imports. It is always generated
+// by this script — never edited manually. Commit it alongside values.yaml
+// so the deployed app stays in sync with the chart version.
 
-/*WRITTING TO schema.json */
-
-// Write schema to src/schema.json
 const outputPath = path.join(__dirname, '../src/schema.json')
 
 fs.writeFileSync(
@@ -122,16 +165,4 @@ fs.writeFileSync(
   JSON.stringify(schema, null, 2)
 )
 
-console.log('schema.json written successfully to src/schema.json')
-
-
-
-/*values.yaml (212,687 chars)
-        ↓
-js-yaml parses structure → 994 fields with paths and defaults
-        ↓
-comment parser → 885 descriptions
-        ↓
-combine both
-        ↓
-schema.json (198,830 bytes) ← single source of truth*/
+process.stdout.write(`[parse] Done — schema.json written to src/schema.json (${fs.statSync(outputPath).size.toLocaleString()} bytes)\n`)
