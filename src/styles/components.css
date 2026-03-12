@@ -52,7 +52,7 @@
   color: #ffffff;
 }
 
-/* Traffic lights — dark theme only */
+/* Traffic lights - dark theme only */
 .traffic-lights {
   display: flex;
   gap: 6px;
@@ -70,7 +70,7 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--text-dim);
+  color: var(--text-muted);
   background: none;
   border: none;
   cursor: pointer;
@@ -108,7 +108,7 @@
 
 .theme-btn.active {
   background-color: var(--accent);
-  border-color: var(--accent);
+  border-color: var(--card-border);
   color: #ffffff;
 }
 
@@ -387,6 +387,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.yaml-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.yaml-header-right {
+  display: flex;
+  gap: 8px;
 }
 
 .yaml-pre {

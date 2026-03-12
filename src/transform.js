@@ -1,15 +1,19 @@
-import { displayConfig } from "./displayConfig"
+/**
+ * transform.js — Answer to Helm Values Transformer
+ *
+ * Converts the flat answers object from the React form into a correctly
+ * structured nested JavaScript object that mirrors the Helm values hierarchy.
+ *
+ * The output of this module is passed to yaml.dump() in App.jsx, which
+ * serialises it to the final YAML string.
+ *
+ * Three steps in order:
+ *   1. applyProductFlags  — set enabled/disabled and database flags automatically
+ *   2. mapFieldsToHelm    — map user answers to their dot-notation Helm paths
+ *   3. cleanObject        — remove empty, null, and undefined values
+ */
 
-// ─── All products known to this app ───────────────────────────────────────────
-// Used to set enabled: false for products the user did NOT select
-const ALL_PRODUCTS = [
-  "orchestration",
-  "optimize",
-  "identity",
-  "webModeler",
-  "connectors",
-  "console",
-]
+import { displayConfig } from "./displayConfig"
 
 // ─── Utility: set a value in a nested object using a dot-notation path ────────
 export function setNestedValue(obj, path, value) {

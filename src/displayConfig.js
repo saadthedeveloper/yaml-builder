@@ -1,3 +1,25 @@
+/**
+ * displayConfig.js - UI Display Configuration
+ *
+ * The single file responsible for what the user sees in the form.
+ * Defines which products are available, which sections appear, and
+ * which fields are rendered - all driven by the user's current answers.
+ *
+ * This is the primary file for ongoing maintenance. Most day-to-day
+ * changes - adding fields, reordering sections, adjusting conditions -
+ * happen here only.
+ *
+ * Structure:
+ *   products  - list of selectable Camunda products
+ *   sections  - list of form sections, each with a showIf condition
+ *     fields  - list of inputs, each mapping to a Helm values path
+ *
+ * To add a new field:
+ *   1. Find the path in schema.json by searching for a keyword
+ *   2. Add a field entry to the relevant section below
+ *   3. Save - the UI updates automatically
+ */
+
 export const displayConfig = {
 
   // ─── Products ───────────────────────────────────────────────────────────────
@@ -12,18 +34,18 @@ export const displayConfig = {
 
   // ─── Sections ───────────────────────────────────────────────────────────────
   // Each section has:
-  //   id        — unique identifier
-  //   title     — displayed in the UI
-  //   showIf    — function that takes answers and returns true/false
-  //   fields    — list of fields to render in this section
+  //   id        - unique identifier
+  //   title     - displayed in the UI
+  //   showIf    - function that takes answers and returns true/false
+  //   fields    - list of fields to render in this section
   //
   // Each field has:
-  //   id        — unique identifier, used to store the answer
-  //   path      — dot-notation path in the Helm values YAML (null for UI-only fields)
-  //   label     — displayed in the UI
-  //   type      — text | password | radio | checkbox | env_vars
-  //   options   — (radio only) list of options
-  //   required  — whether the field must be filled before generating
+  //   id        - unique identifier, used to store the answer
+  //   path      - dot-notation path in the Helm values YAML (null for UI-only fields)
+  //   label     - displayed in the UI
+  //   type      - text | password | radio | checkbox | env_vars
+  //   options   - (radio only) list of options
+  //   required  - whether the field must be filled before generating
 
   sections: [
 
@@ -90,6 +112,8 @@ export const displayConfig = {
     {
       id: 'standaloneElasticsearch',
       title: 'Elasticsearch Configuration',
+      // !== acts as XOR - true only when exactly one of orchestration/optimize is selected
+      // (not both, not neither). When both are selected the shared section is shown instead.
       showIf: (answers) =>
         (answers.products.includes('orchestration') !== answers.products.includes('optimize')) &&
         answers.databaseType === 'elasticsearch',
@@ -108,6 +132,8 @@ export const displayConfig = {
     {
       id: 'standaloneOpensearch',
       title: 'OpenSearch Configuration',
+      // !== acts as XOR - true only when exactly one of orchestration/optimize is selected
+      // (not both, not neither). When both are selected the shared section is shown instead.
       showIf: (answers) =>
         (answers.products.includes('orchestration') !== answers.products.includes('optimize')) &&
         answers.databaseType === 'opensearch',

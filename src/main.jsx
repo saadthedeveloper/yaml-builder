@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+// Order matters - theme defines CSS variables that global and components depend on
 import './styles/theme.css'
 import './styles/global.css'
 import './styles/components.css'

@@ -1,5 +1,5 @@
 /**
- * parseValues.js — YAML Schema Extractor
+ * parseValues.js - YAML Schema Extractor
  *
  * Reads the official Camunda Helm chart values.yaml, extracts every
  * configurable field and its ## @param description, then writes a flat
@@ -39,12 +39,12 @@ const rawYaml = fs.readFileSync(
   'utf8'
 )
 
-process.stdout.write(`[parse] Read values.yaml — ${rawYaml.length.toLocaleString()} characters\n`)
+process.stdout.write(`[parse] Read values.yaml - ${rawYaml.length.toLocaleString()} characters\n`)
 
 // Parse the YAML into a JavaScript object so we can traverse its structure
 const parsedYaml = yaml.load(rawYaml)
 
-process.stdout.write(`[parse] YAML parsed — top-level keys: ${Object.keys(parsedYaml).join(', ')}\n`)
+process.stdout.write(`[parse] YAML parsed - top-level keys: ${Object.keys(parsedYaml).join(', ')}\n`)
 
 
 // ─── Object Flattening ────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ function flattenObject(obj, parentPath = '') {
 
 const flatFields = flattenObject(parsedYaml)
 
-process.stdout.write(`[parse] Flattened — ${flatFields.length} fields extracted\n`)
+process.stdout.write(`[parse] Flattened - ${flatFields.length} fields extracted\n`)
 
 
 // ─── Comment Parser ───────────────────────────────────────────────────────────
@@ -124,7 +124,7 @@ function parseComments(rawText) {
 
 const comments = parseComments(rawYaml)
 
-process.stdout.write(`[parse] Comments parsed — ${Object.keys(comments).length} @param descriptions found\n`)
+process.stdout.write(`[parse] Comments parsed - ${Object.keys(comments).length} @param descriptions found\n`)
 
 
 // ─── Combine Fields and Comments ──────────────────────────────────────────────
@@ -149,13 +149,13 @@ function combineFieldsAndComments(flatFields, comments) {
 
 const schema = combineFieldsAndComments(flatFields, comments)
 
-process.stdout.write(`[parse] Schema built — ${schema.length} entries total\n`)
+process.stdout.write(`[parse] Schema built - ${schema.length} entries total\n`)
 
 
 // ─── Write Output ─────────────────────────────────────────────────────────────
 //
 // schema.json is the single file the React UI imports. It is always generated
-// by this script — never edited manually. Commit it alongside values.yaml
+// by this script - never edited manually. Commit it alongside values.yaml
 // so the deployed app stays in sync with the chart version.
 
 const outputPath = path.join(__dirname, '../src/schema.json')
@@ -165,4 +165,4 @@ fs.writeFileSync(
   JSON.stringify(schema, null, 2)
 )
 
-process.stdout.write(`[parse] Done — schema.json written to src/schema.json (${fs.statSync(outputPath).size.toLocaleString()} bytes)\n`)
+process.stdout.write(`[parse] Done - schema.json written to src/schema.json (${fs.statSync(outputPath).size.toLocaleString()} bytes)\n`)

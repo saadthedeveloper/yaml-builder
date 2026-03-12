@@ -1,3 +1,23 @@
+/**
+ * App.jsx - Main UI Component
+ *
+ * Renders the entire Camunda Helm Values Generator interface.
+ * The form structure is driven entirely by displayConfig.js - no fields
+ * are hardcoded here. Adding or removing fields only requires changes
+ * to displayConfig.js.
+ *
+ * Component tree:
+ *   App
+ *   ├── ThemeSelector
+ *   ├── Product selection grid
+ *   ├── Section (repeated for each visible section)
+ *   │   └── Field (text | password | radio | checkbox | env_vars)
+ *   │       └── Tooltip
+ *   ├── Validation errors
+ *   ├── Generate button
+ *   └── YAML output
+ */
+
 import { useState, useEffect, useRef } from "react"
 import { displayConfig } from "./displayConfig"
 import { transformAnswers } from "./transform"
@@ -19,8 +39,9 @@ function Tooltip({ path }) {
 
   const handleMouseEnter = () => {
     const rect = iconRef.current.getBoundingClientRect()
+    // Use viewport coordinates (fixed positioning uses viewport, not document)
     setPos({
-      top: rect.top - 8,   // above the icon
+      top: rect.top,       // top of the icon in viewport
       left: rect.left + rect.width / 2,
     })
   }
@@ -394,11 +415,11 @@ export default function App() {
         {yamlOutput && (
           <div className="yaml-output">
             <div className="yaml-header">
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div className="yaml-header-left">
                 <div className="card-accent-bar success" />
                 <h2 className="card-title">Generated values.yaml</h2>
               </div>
-              <div style={{ display: "flex", gap: "8px" }}>
+              <div className="yaml-header-right">
                 <button className={`btn-copy ${copied ? "copied" : ""}`} onClick={handleCopy}>
                   {copied ? "✓ Copied" : "Copy"}
                 </button>

@@ -1,5 +1,19 @@
 /* ─── Theme Variables ──────────────────────────────────────────────────────── */
-/* Usage: add data-theme="dark" | "light" | "camunda" to <html> element       */
+/*
+ * Usage: set data-theme="dark" | "light" | "camunda" on the <html> element.
+ * Theme switching is handled in App.jsx via localStorage persistence.
+ *
+ * Variable groups:
+ *
+ * Layout:    --bg, --header-bg, --header-border
+ * Cards:     --card-bg, --card-border
+ * Inputs:    --input-bg, --input-border, --input-focus
+ * Text:      --text, --text-muted, --text-dim, --text-label
+ * Accent:    --accent, --accent-hover, --accent-glow, --accent-pink
+ * States:    --success, --error, --error-bg, --error-text
+ * YAML:      --yaml-bg, --yaml-text
+ * Selection: --selected-bg, --unselected-bg
+ */
 
 [data-theme="dark"] {
   --bg:               #0a0a1a;
@@ -60,13 +74,13 @@
   --header-bg:        #fc5d0a;
   --header-border:    #e04d00;
   --card-bg:          #161b22;
-  --card-border:      rgba(252, 93, 10, 0.27);
+  --card-border:      rgba(255, 255, 255, 0.27);
   --input-bg:         #0d1117;
   --input-border:     rgba(252, 93, 10, 0.27);
   --input-focus:      #fc5d0a;
   --text:             #e6edf3;
-  --text-muted:       #fc5d0a;
-  --text-dim:         #8b949e;
+  --text-muted:       #f7f7f7;
+  --text-dim:         #a1a0b9;
   --text-label:       #e6edf3;
   --accent:           #fc5d0a;
   --accent-hover:     #ff7a30;
