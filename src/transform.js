@@ -85,9 +85,8 @@ function applyProductFlags(helmValues, answers) {
   // ── Console ───────────────────────────────────────────────────────────────
   helmValues = setNestedValue(helmValues, "console.enabled", selected.includes("console"))
 
-  // ── Cluster type flags ────────────────────────────────────────────────────
-  // Applied automatically based on the selected Kubernetes cluster type.
-  // Only flags with real schema paths are set - GKE, AKS, IBM, and Bare Metal
+  // ── Cluster type flags ─────────────────────────────────────────────────────
+  // Only flags with real schema paths are set — GKE, AKS, IBM, and Bare Metal
   // have no cluster-specific Helm values so no flags are needed for them.
   if (answers.clusterType === 'AWS EKS') {
     // Enable AWS IRSA (IAM Roles for Service Accounts) for OpenSearch
@@ -95,7 +94,14 @@ function applyProductFlags(helmValues, answers) {
   }
   if (answers.clusterType === 'OpenShift') {
     // Force security context adaptation for OpenShift restricted-v2 SCC
+    // Must be set on the top-level chart AND each sub-chart that has its own
+    // compatibility block — otherwise sub-charts like PostgreSQL and Elasticsearch
+    // will still run with the wrong security context and fail on OpenShift.
     helmValues = setNestedValue(helmValues, 'global.compatibility.openshift.adaptSecurityContext', 'force')
+    helmValues = setNestedValue(helmValues, 'identityPostgresql.global.compatibility.openshift.adaptSecurityContext', 'force')
+    helmValues = setNestedValue(helmValues, 'identityKeycloak.global.compatibility.openshift.adaptSecurityContext', 'force')
+    helmValues = setNestedValue(helmValues, 'webModelerPostgresql.global.compatibility.openshift.adaptSecurityContext', 'force')
+    helmValues = setNestedValue(helmValues, 'elasticsearch.global.compatibility.openshift.adaptSecurityContext', 'force')
   }
 
   // ── Database type flags ────────────────────────────────────────────────────
@@ -120,6 +126,16 @@ function applyProductFlags(helmValues, answers) {
     helmValues = setNestedValue(helmValues, "global.elasticsearch.enabled", false)
     helmValues = setNestedValue(helmValues, "global.opensearch.enabled", false)
     helmValues = setNestedValue(helmValues, "elasticsearch.enabled", false)
+  }
+
+  // ── Ingress flags ──────────────────────────────────────────────────────────
+  // Explicitly set ingress to disabled if the user did not enable it.
+  // This makes the intent unambiguous rather than relying on Helm defaults.
+  if (!answers.ingress_enabled) {
+    helmValues = setNestedValue(helmValues, "global.ingress.enabled", false)
+  }
+  if (selected.includes("orchestration") && !answers.grpc_enabled) {
+    helmValues = setNestedValue(helmValues, "orchestration.ingress.grpc.enabled", false)
   }
 
   return helmValues
