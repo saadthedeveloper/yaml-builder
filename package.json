@@ -4,12 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "parse": "node scripts/parseValues.js",
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
+  "dev": "vite",
+  "build": "vite build",
+  "preview": "vite preview",
+  "lint": "eslint .",
+  "parse": "node scripts/parseValues.js",
+  "validate": "node scripts/validatePaths.js"
+},
   "dependencies": {
     "js-yaml": "^4.1.1",
     "react": "^19.2.0",

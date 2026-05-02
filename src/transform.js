@@ -86,14 +86,13 @@ function applyProductFlags(helmValues, answers) {
   helmValues = setNestedValue(helmValues, "console.enabled", selected.includes("console"))
 
   // ── Cluster type flags ─────────────────────────────────────────────────────
-  // Only flags with real schema paths are set — GKE, AKS, IBM, and Bare Metal
-  // have no cluster-specific Helm values so no flags are needed for them.
-  if (answers.clusterType === 'AWS EKS') {
-    // Enable AWS IRSA (IAM Roles for Service Accounts) for OpenSearch
+  if (answers.clusterType === 'AWS EKS' && answers.databaseType === 'opensearch') {
+    // Enable AWS IRSA (IAM Roles for Service Accounts) for OpenSearch.
+    // Only set when OpenSearch is selected — irrelevant for Elasticsearch.
     helmValues = setNestedValue(helmValues, 'global.opensearch.aws.enabled', true)
   }
   if (answers.clusterType === 'OpenShift') {
-    // Force security context adaptation for OpenShift restricted-v2 SCC
+    // Force security context adaptation for OpenShift restricted-v2 SCC.
     // Must be set on the top-level chart AND each sub-chart that has its own
     // compatibility block — otherwise sub-charts like PostgreSQL and Elasticsearch
     // will still run with the wrong security context and fail on OpenShift.

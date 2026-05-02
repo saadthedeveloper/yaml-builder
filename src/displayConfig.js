@@ -49,23 +49,41 @@ export const displayConfig = {
 
   sections: [
 
-    // ── Cluster Type ───────────────────────────────────────────────────────────
-    // Shown as soon as any product is selected.
-    // OpenShift affects security contexts for all products.
-    // AWS EKS affects OpenSearch config.
-    // GKE, AKS, IBM, and Bare Metal produce no extra flags but are listed
-    // for completeness so the user isn't confused by a missing option.
+    // ── OpenShift ──────────────────────────────────────────────────────────────
+    // Shown when any product is selected.
+    // OpenShift enforces stricter security contexts — selecting this sets
+    // adaptSecurityContext: force on all components and sub-charts automatically.
     {
-      id: 'clusterType',
-      title: 'Kubernetes Cluster Type',
+      id: 'openshiftCluster',
+      title: 'OpenShift',
       showIf: (answers) => answers.products.length > 0,
       fields: [
         {
-          id: 'clusterType',
+          id: 'isOpenShift',
           path: null,
-          label: 'Select Cluster Type',
-          type: 'radio',
-          options: ['AWS EKS', 'OpenShift'],
+          label: 'Deploying on OpenShift',
+          type: 'checkbox',
+          required: false,
+        }
+      ]
+    },
+
+    // ── AWS EKS ────────────────────────────────────────────────────────────────
+    // Only shown when OpenSearch is selected as the database type.
+    // AWS EKS supports IRSA (IAM Roles for Service Accounts) for OpenSearch
+    // authentication — this sets global.opensearch.aws.enabled automatically.
+    {
+      id: 'awsEksCluster',
+      title: 'AWS EKS',
+      showIf: (answers) =>
+        (answers.products.includes('orchestration') || answers.products.includes('optimize')) &&
+        answers.databaseType === 'opensearch',
+      fields: [
+        {
+          id: 'isAwsEks',
+          path: null,
+          label: 'Deploying on AWS EKS',
+          type: 'checkbox',
           required: false,
         }
       ]
@@ -301,12 +319,32 @@ export const displayConfig = {
     },
 
     // ── Web Modeler Environment Variables ──────────────────────────────────────
+    // webModeler has three sub-components each with their own env vars.
+    // restapi is the backend, webapp is the frontend, websockets handles live updates.
     {
-      id: 'webModelerEnv',
-      title: 'Web Modeler Environment Variables',
+      id: 'webModelerRestapiEnv',
+      title: 'Web Modeler REST API Environment Variables',
       showIf: (answers) => answers.products.includes('webModeler'),
       fields: [
-        { id: 'webModeler_env', path: 'webModeler.env', label: 'Environment Variables', type: 'env_vars', required: false }
+        { id: 'webModeler_restapi_env', path: 'webModeler.restapi.env', label: 'Environment Variables', type: 'env_vars', required: false }
+      ]
+    },
+
+    {
+      id: 'webModelerWebappEnv',
+      title: 'Web Modeler Web App Environment Variables',
+      showIf: (answers) => answers.products.includes('webModeler'),
+      fields: [
+        { id: 'webModeler_webapp_env', path: 'webModeler.webapp.env', label: 'Environment Variables', type: 'env_vars', required: false }
+      ]
+    },
+
+    {
+      id: 'webModelerWebsocketsEnv',
+      title: 'Web Modeler WebSockets Environment Variables',
+      showIf: (answers) => answers.products.includes('webModeler'),
+      fields: [
+        { id: 'webModeler_websockets_env', path: 'webModeler.websockets.env', label: 'Environment Variables', type: 'env_vars', required: false }
       ]
     },
 
